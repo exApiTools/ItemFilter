@@ -100,6 +100,7 @@ public partial class ItemData
     public int ScourgeTier { get; } = 0;
     public bool IsIdentified { get; } = false;
     public Influence InfluenceFlags { get; set; }
+    public bool IsMirrored { get; } = false;
     public bool IsCorrupted { get; } = false;
     public bool IsElder { get; } = false;
     public bool IsShaper { get; } = false;
@@ -252,6 +253,7 @@ public partial class ItemData
             Name = string.IsNullOrWhiteSpace(modsComp.UniqueName) ? Name : modsComp.UniqueName;
             FracturedModCount = modsComp.CountFractured;
             IsSynthesised = modsComp.Synthesised;
+            IsMirrored = modsComp.IsMirrored;
             Enchanted = modsComp.EnchantedMods?.Count > 0;
 
             ModsInfo = new ModsData(modsComp.ItemMods, modsComp.EnchantedMods, modsComp.ExplicitMods, modsComp.FracturedMods, modsComp.ImplicitMods, modsComp.ScourgeMods, modsComp.SynthesisMods, modsComp.CrucibleMods);
@@ -265,7 +267,7 @@ public partial class ItemData
             ModsNames = ModsInfo.ItemMods.Select(mod => mod.Name).ToList();
             VeiledModCount = ModsInfo.ItemMods.Count(m => m.DisplayName.Contains("Veil"));
             DeliriumStacks = ModsInfo.ItemMods.Count(m => m.Name.Contains("AfflictionMapReward"));
-            
+
 
         }
 
@@ -504,8 +506,8 @@ public partial class ItemData
 
     public IReadOnlyDictionary<GameStat, int> GetItemStats(IEnumerable<ItemMod> list)
     {
-        var cacheKey = list is IReadOnlyCollection<ItemMod> collection 
-            ? ModsInfo.ModsDictionary.GetValueOrDefault(collection) 
+        var cacheKey = list is IReadOnlyCollection<ItemMod> collection
+            ? ModsInfo.ModsDictionary.GetValueOrDefault(collection)
             : null;
         if (cacheKey == null)
         {
@@ -593,25 +595,25 @@ public partial class ItemData
 
     public bool HasTag(string wantedTag)
     {
-        return CheckAndCacheTags($"Single_{wantedTag.ToLower()}", 
+        return CheckAndCacheTags($"Single_{wantedTag.ToLower()}",
             () => Tags.Concat(PathTags).Any(tag => tag.Contains(wantedTag, StringComparison.OrdinalIgnoreCase)));
     }
 
     public bool HasTagCase(string wantedTag)
     {
-        return CheckAndCacheTags($"SingleCase_{wantedTag}", 
+        return CheckAndCacheTags($"SingleCase_{wantedTag}",
             () => Tags.Concat(PathTags).Any(tag => tag.Contains(wantedTag)));
     }
 
     public bool HasTag(List<string> tags, string wantedTag)
     {
-        return CheckAndCacheTags($"List_{string.Join("_", tags.OrderBy(x => x))}_{wantedTag.ToLower()}", 
+        return CheckAndCacheTags($"List_{string.Join("_", tags.OrderBy(x => x))}_{wantedTag.ToLower()}",
             () => tags.Any(tag => tag.Contains(wantedTag, StringComparison.OrdinalIgnoreCase)));
     }
 
     public bool HasTagCase(List<string> tags, string wantedTag)
     {
-        return CheckAndCacheTags($"ListCase_{string.Join("_", tags.OrderBy(x => x))}_{wantedTag}", 
+        return CheckAndCacheTags($"ListCase_{string.Join("_", tags.OrderBy(x => x))}_{wantedTag}",
             () => tags.Any(tag => tag.Contains(wantedTag)));
     }
 
