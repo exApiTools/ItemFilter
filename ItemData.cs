@@ -76,7 +76,7 @@ public partial class ItemData
 
     public record AttributeRequirementsData(int Strength, int Dexterity, int Intelligence);
 
-    public record ArmourData(int Armour, int Evasion, int ES);
+    public record ArmourData(int Armour, int Evasion, int ES, int Perfection);
 
     public record AreaData(int Level, string Name, int Act, bool IsEndGame);
 
@@ -134,7 +134,7 @@ public partial class ItemData
     public ChargesData ChargeInfo { get; } = new ChargesData(0, 0, 0);
     public FlaskData FlaskInfo { get; } = new FlaskData(0, 0, new Dictionary<GameStat, int>());
     public AttributeRequirementsData AttributeRequirements { get; } = new AttributeRequirementsData(0, 0, 0);
-    public ArmourData ArmourInfo { get; } = new ArmourData(0, 0, 0);
+    public ArmourData ArmourInfo { get; } = new ArmourData(0, 0, 0, 0);
     public ModsData ModsInfo { get; } = new ModsData(new List<ItemMod>(), new List<ItemMod>(), new List<ItemMod>(), new List<ItemMod>(), new List<ItemMod>(), new List<ItemMod>(), new List<ItemMod>(), new List<ItemMod>());
     public AreaData AreaInfo { get; } = new AreaData(0, "N/A", 0, false);
     public ExpeditionSaga ExpeditionInfo { get; } = new ExpeditionSaga();
@@ -414,7 +414,7 @@ public partial class ItemData
 
         if (item.TryGetComponent<Armour>(out var armourComp))
         {
-            ArmourInfo = new ArmourData(armourComp.ArmourScore, armourComp.EvasionScore, armourComp.EnergyShieldScore);
+            ArmourInfo = new ArmourData(armourComp.ArmourScore, armourComp.EvasionScore, armourComp.EnergyShieldScore, armourComp.PerfectionScore);
         }
 
         if (item.TryGetComponent<Shield>(out var shieldComp))
