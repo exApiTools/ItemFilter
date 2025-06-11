@@ -21,7 +21,8 @@ public partial class ItemData
             InventorySlotE.Boots1,
             InventorySlotE.Amulet1,
             InventorySlotE.Ring1,
-            InventorySlotE.Ring2
+            InventorySlotE.Ring2,
+            InventorySlotE.Belt1,
         };
 
         private readonly List<long> _equippedItemAddresses = new();
