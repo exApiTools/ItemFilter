@@ -43,7 +43,12 @@ public partial class ItemData
         public bool Uber { get; set; } = Uber;
     }
 
-    public class MapData(bool IsMap, int Tier, int Quantity, int Rarity, int PackSize, int Quality, int MoreMaps, int MoreScarabs, int MoreCurrency, bool Occupied, MapOccupationData OccupiedBy, MapTypeData Type, bool IsBonusCompleted, bool IsCompleted, WorldArea Area)
+    public class MapInfluenceData(bool Memory)
+    {
+        public bool Memory { get; set; } = Memory;
+    }
+
+    public class MapData(bool IsMap, int Tier, int Quantity, int Rarity, int PackSize, int Quality, int MoreMaps, int MoreScarabs, int MoreCurrency, bool Occupied, MapOccupationData OccupiedBy, MapTypeData Type, MapInfluenceData Influence, bool IsBonusCompleted, bool IsCompleted, WorldArea Area)
     {
         public bool IsMap { get; set; } = IsMap;
         public int Tier { get; set; } = Tier;
@@ -57,6 +62,7 @@ public partial class ItemData
         public bool Occupied { get; set; } = Occupied;
         public MapOccupationData OccupiedBy { get; set; } = OccupiedBy;
         public MapTypeData Type { get; set; } = Type;
+        public MapInfluenceData Influence { get; set; } = Influence;
         public bool IsBonusCompleted { get; set; } = IsBonusCompleted;
         public bool IsCompleted { get; set; } = IsCompleted;
         public WorldArea Area { get; set; } = Area;
@@ -139,7 +145,7 @@ public partial class ItemData
     public ModsData ModsInfo { get; } = new ModsData(new List<ItemMod>(), new List<ItemMod>(), new List<ItemMod>(), new List<ItemMod>(), new List<ItemMod>(), new List<ItemMod>(), new List<ItemMod>(), new List<ItemMod>());
     public AreaData AreaInfo { get; } = new AreaData(0, "N/A", 0, false);
     public ExpeditionSaga ExpeditionInfo { get; } = new ExpeditionSaga();
-    public MapData MapInfo { get; set; } = new MapData(false, 0, 0, 0, 0, 0, 0, 0, 0, false, new MapOccupationData(false, false, false, false, false, false, false, false, false, false), new MapTypeData(false, false, false, false), false, false, null);
+    public MapData MapInfo { get; set; } = new MapData(false, 0, 0, 0, 0, 0, 0, 0, 0, false, new MapOccupationData(false, false, false, false, false, false, false, false, false, false), new MapTypeData(false, false, false, false), new MapInfluenceData(false), false, false, null);
 
     public AttackSpeedData AttackSpeed { get; } = new AttackSpeedData(0, 0);
 
@@ -347,6 +353,8 @@ public partial class ItemData
             MapInfo.Type.Blighted = itemStats[GameStat.IsBlightedMap] == 1;
             MapInfo.Type.Uber = itemStats[GameStat.MapIsUberMap] == 1;
             MapInfo.Type.Normal = !MapInfo.Type.Blighted && !MapInfo.Type.BlightRavaged && !MapInfo.Occupied && !MapInfo.Type.Uber;
+
+            MapInfo.Influence.Memory = itemStats[GameStat.MapZanaInfluence] == 1;
 
             MapInfo.PackSize = itemStats[GameStat.MapPackSizePct];
             MapInfo.Quantity = itemStats[GameStat.MapItemDropQuantityPct];
