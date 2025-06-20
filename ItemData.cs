@@ -102,6 +102,8 @@ public partial class ItemData
     public int VeiledModCount { get; } = 0;
     public int FracturedModCount { get; } = 0;
     public int ItemLevel { get; } = 0;
+    public int RequiredLevel { get; } = 0;
+    // public int RealRequiredLevel { get; } = 0; // TODO: Add calculations from equipped gems to get real required level
     public int DeliriumStacks { get; } = 0;
     public int HeistContractReqJobLevel { get; } = 0;
     public int ScourgeTier { get; } = 0;
@@ -255,6 +257,7 @@ public partial class ItemData
 
         if (item.TryGetComponent<Mods>(out var modsComp))
         {
+            RequiredLevel = modsComp.RequiredLevel;
             Rarity = modsComp.ItemRarity;
             var affixSlots = GetTotalAffixSlots();
             IsIdentified = modsComp.Identified;
