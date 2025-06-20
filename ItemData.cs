@@ -295,10 +295,6 @@ public partial class ItemData
             if (socketComp.NumberOfSockets > 0)
                 SocketInfo = new SocketData(socketComp.LargestLinkSize, socketComp.NumberOfSockets, socketComp.Links, socketComp.SocketGroup,
                     socketComp.SocketedGems.Select(x => new ItemData(x.GemEntity, GameController)).ToList());
-
-            RealRequiredLevel = Math.Max(
-                socketComp.SocketedGems.Select(g => g.GemEntity.TryGetComponent<SkillGem>(out var gem) ? gem.RequiredLevel : 0).DefaultIfEmpty(0).Max(),
-                RequiredLevel);
         }
 
         if (item.TryGetComponent<SkillGem>(out var gemComp))
@@ -454,6 +450,19 @@ public partial class ItemData
             }
             return value ?? 0;
         }, LazyThreadSafetyMode.PublicationOnly);
+
+        RealRequiredLevel = Math.Max(
+            SocketInfo.SocketedGems.Select(
+                    g =>
+                    {
+                        if (g.Entity.TryGetComponent<SkillGem>(out var gemComp))
+                            return gemComp.RequiredLevel;
+                        if (g.Entity.TryGetComponent<Mods>(out var modsComp))
+                            return modsComp.RequiredLevel;
+                        return 0;
+                    })
+                .DefaultIfEmpty(0)
+                .Max(), RequiredLevel);
     }
 
     public int GetTotalAffixSlots() => Rarity switch
