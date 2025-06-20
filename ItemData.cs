@@ -103,7 +103,7 @@ public partial class ItemData
     public int FracturedModCount { get; } = 0;
     public int ItemLevel { get; } = 0;
     public int RequiredLevel { get; } = 0;
-    // public int RealRequiredLevel { get; } = 0; // TODO: Add calculations from equipped gems to get real required level
+    public int RealRequiredLevel { get; } = 0;
     public int DeliriumStacks { get; } = 0;
     public int HeistContractReqJobLevel { get; } = 0;
     public int ScourgeTier { get; } = 0;
@@ -295,6 +295,10 @@ public partial class ItemData
             if (socketComp.NumberOfSockets > 0)
                 SocketInfo = new SocketData(socketComp.LargestLinkSize, socketComp.NumberOfSockets, socketComp.Links, socketComp.SocketGroup,
                     socketComp.SocketedGems.Select(x => new ItemData(x.GemEntity, GameController)).ToList());
+
+            RealRequiredLevel = Math.Max(
+                socketComp.SocketedGems.Select(g => g.GemEntity.TryGetComponent<SkillGem>(out var gem) ? gem.RequiredLevel : 0).DefaultIfEmpty(0).Max(),
+                RequiredLevel);
         }
 
         if (item.TryGetComponent<SkillGem>(out var gemComp))
