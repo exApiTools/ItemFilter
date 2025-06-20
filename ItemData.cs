@@ -102,6 +102,7 @@ public partial class ItemData
     public int VeiledModCount { get; } = 0;
     public int FracturedModCount { get; } = 0;
     public int ItemLevel { get; } = 0;
+    public int RequiredLevel { get; } = 0;
     public int DeliriumStacks { get; } = 0;
     public int HeistContractReqJobLevel { get; } = 0;
     public int ScourgeTier { get; } = 0;
@@ -259,6 +260,7 @@ public partial class ItemData
             var affixSlots = GetTotalAffixSlots();
             IsIdentified = modsComp.Identified;
             ItemLevel = modsComp.ItemLevel;
+            RequiredLevel = modsComp.RequiredLevel;
             Name = string.IsNullOrWhiteSpace(modsComp.UniqueName) ? Name : modsComp.UniqueName;
             FracturedModCount = modsComp.CountFractured;
             IsSynthesised = modsComp.Synthesised;
