@@ -130,6 +130,7 @@ public partial class ItemData
     public uint Id { get; }
     public int Height { get; } = 0;
     public int Width { get; } = 0;
+    public int MemoryStrands { get; } = 0;
     public bool IsWeapon { get; } = false;
     public int ShieldBlockChance { get; } = 0;
     public float Distance => GroundItem?.DistancePlayer ?? float.PositiveInfinity;
@@ -280,7 +281,7 @@ public partial class ItemData
             VeiledModCount = ModsInfo.ItemMods.Count(m => m.DisplayName.Contains("Veil"));
             DeliriumStacks = ModsInfo.ItemMods.Count(m => m.Name.Contains("AfflictionMapReward"));
 
-
+            MemoryStrands = modsComp.MemoryStrands;
         }
 
         if (item.TryGetComponent<NecropolisCorpse>(out var corpseComp))
