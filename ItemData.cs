@@ -69,6 +69,7 @@ public partial class ItemData
     }
     #endregion
 
+    public record CapturedMonsterData(bool IsMonster, string Name, string Id);
     public record NecropolisCorpseData(NecropolisCraftingMod CraftingMod, MonsterVariety Monster);
 
     public record SkillGemData(int Level, int MaxLevel, SkillGemQualityTypeE QualityType, bool IsGem);
@@ -139,6 +140,7 @@ public partial class ItemData
     public Entity Entity { get; }
     public Entity GroundItem { get; }
     public GameController GameController { get; }
+    public CapturedMonsterData CapturedMonsterInfo { get; } = new CapturedMonsterData(false, "N/A", "N/A");
     public NecropolisCorpseData CorpseInfo { get; } = new NecropolisCorpseData(new NecropolisCraftingMod(), new MonsterVariety());
     public SocketData SocketInfo { get; } = new SocketData(0, 0, new List<IReadOnlyCollection<int>>(), new List<string>(), new List<ItemData>());
     public ChargesData ChargeInfo { get; } = new ChargesData(0, 0, 0);
@@ -231,6 +233,12 @@ public partial class ItemData
         if (curArea != null)
         {
             AreaInfo = new AreaData(curArea.RealLevel, curArea.Name, curArea.Act, curArea.Act > 10);
+        }
+
+        if (item.TryGetComponent<CapturedMonster>(out var capturedMonsterComp))
+        {
+            CapturedMonsterInfo = new CapturedMonsterData(
+                true, capturedMonsterComp.MonsterVariety.MonsterName ?? "N/A", capturedMonsterComp.MonsterVariety.VarietyId ?? "N/A");
         }
 
         if (item.TryGetComponent<Quality>(out var quality))
