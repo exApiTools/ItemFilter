@@ -99,6 +99,8 @@ public partial class ItemData
 
         public IReadOnlyCollection<ItemMod> Prefixes { get; } = ExplicitMods.Where(m => m.ModRecord.AffixType == ModType.Prefix).ToList();
         public IReadOnlyCollection<ItemMod> Suffixes { get; } = ExplicitMods.Where(m => m.ModRecord.AffixType == ModType.Suffix).ToList();
+        public int MaxAllowedPrefixCount { get; set; } = -1;
+        public int MaxAllowedSuffixCount { get; set; } = -1;
         public int OpenPrefixCount { get; set; } = -1;
         public int OpenSuffixCount { get; set; } = -1;
         public bool HasOpenPrefix { get; set; } = false;

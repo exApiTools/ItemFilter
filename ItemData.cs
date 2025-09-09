@@ -278,12 +278,14 @@ public partial class ItemData
             Enchanted = modsComp.EnchantedMods?.Count > 0;
 
             ModsInfo = new ModsData(modsComp.ItemMods, modsComp.EnchantedMods, modsComp.ExplicitMods, modsComp.FracturedMods, modsComp.ImplicitMods, modsComp.ScourgeMods, modsComp.SynthesisMods, modsComp.CrucibleMods);
+            ModsInfo.MaxAllowedPrefixCount = Math.Max(0, affixSlots + ItemStats[GameStat.LocalMaximumPrefixesAllowed]);
+            ModsInfo.MaxAllowedSuffixCount = Math.Max(0, affixSlots + ItemStats[GameStat.LocalMaximumSuffixesAllowed]);
             if (IsIdentified)
             {
-                ModsInfo.OpenPrefixCount = Math.Max(0, affixSlots - ModsInfo.Prefixes.Count + ItemStats[GameStat.LocalMaximumPrefixesAllowed]);
-                ModsInfo.OpenSuffixCount = Math.Max(0, affixSlots - ModsInfo.Suffixes.Count + ItemStats[GameStat.LocalMaximumSuffixesAllowed]);
-                ModsInfo.HasOpenPrefix = ModsInfo.OpenPrefixCount >= 1;
-                ModsInfo.HasOpenSuffix = ModsInfo.OpenSuffixCount >= 1;
+                ModsInfo.OpenPrefixCount = Math.Max(0, ModsInfo.MaxAllowedPrefixCount - ModsInfo.Prefixes.Count);
+                ModsInfo.OpenSuffixCount = Math.Max(0, ModsInfo.MaxAllowedSuffixCount - ModsInfo.Suffixes.Count);
+                ModsInfo.HasOpenPrefix = ModsInfo.OpenPrefixCount > 0;
+                ModsInfo.HasOpenSuffix = ModsInfo.OpenSuffixCount > 0;
             }
             ModsNames = ModsInfo.ItemMods.Select(mod => mod.Name).ToList();
             VeiledModCount = ModsInfo.ItemMods.Count(m => m.DisplayName.Contains("Veil"));
