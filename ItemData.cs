@@ -300,6 +300,11 @@ public partial class ItemData
             CorpseInfo = new NecropolisCorpseData(corpseComp.CraftingMod, corpseComp.MonsterVariety);
         }
 
+        if (item.TryGetComponent<BrequelFruit>(out var brequelFruit))
+        {
+            ItemLevel = brequelFruit.Level;
+        }
+
         if (item.TryGetComponent<Sockets>(out var socketComp))
         {
             // issue to be resolved in core, if a corrupted ring with sockets gets a new implicit it will still have the component but the component logic will throw an exception
