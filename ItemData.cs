@@ -99,6 +99,7 @@ public partial class ItemData
     public string Name { get; } = string.Empty;
     public string PublicPrice { get; } = string.Empty;
     public string HeistContractJobType { get; } = string.Empty;
+    public string HeistContractTargetItem { get; } = string.Empty;
     public int ItemQuality { get; } = 0;
     public int VeiledModCount { get; } = 0;
     public int FracturedModCount { get; } = 0;
@@ -390,6 +391,7 @@ public partial class ItemData
         {
             HeistContractJobType = heistComp.RequiredJob?.Name ?? "";
             HeistContractReqJobLevel = heistComp.RequiredJobLevel;
+            HeistContractTargetItem = heistComp.TargetItem?.BaseName ?? "";
         }
 
         if (item.TryGetComponent<Charges>(out var chargesComp))
