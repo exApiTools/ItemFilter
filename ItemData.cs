@@ -215,7 +215,7 @@ public partial class ItemData
         GroundItem = groundItem;
         Entity = itemEntity;
         GameController = gc;
-        Path = item.Path;
+        Path = item.Path ?? string.Empty;
         Id = item.Id;
         InventoryId = item.InventoryId;
 

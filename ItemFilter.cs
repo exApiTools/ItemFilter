@@ -30,10 +30,8 @@ public class ItemQuery<T> where T : ItemData
 
     public bool Matches(T item, bool enableDebug)
     {
-        if (FailedToCompile)
-        {
+        if (item?.Entity?.IsValid != true || FailedToCompile)
             return false;
-        }
 
         try
         {
@@ -46,7 +44,7 @@ public class ItemQuery<T> where T : ItemData
         }
         catch (Exception ex)
         {
-            DebugWindow.LogError($"[ItemQueryProcessor] Evaluation error for query {RawQuery}. Item {item.BaseName}\n{ex}");
+            DebugWindow.LogError($"[ItemQueryProcessor] Evaluation error for query {RawQuery}. Item {item?.BaseName ?? "null"}\n{ex}");
             return false;
         }
 
@@ -248,6 +246,9 @@ public class ItemFilter<T> where T : ItemData
 
     public bool Matches(T item, bool enableDebug)
     {
+        if (item?.Entity?.IsValid != true)
+            return false;
+
         foreach (var (query, isNegative) in _queries)
         {
             try
@@ -264,7 +265,7 @@ public class ItemFilter<T> where T : ItemData
             {
                 // huge issue when the amount of catching starts creeping up
                 // 4500 lines that produce an error on one item take 50ms per Tick() vs handling the error taking 0.2ms
-                DebugWindow.LogError($"Evaluation Error! Line # {query.InitialLine} Entry: '{query.RawQuery}' Item {item.BaseName}\n{ex}");
+                DebugWindow.LogError($"Evaluation Error! Line # {query.InitialLine} Entry: '{query.RawQuery}' Item {item?.BaseName ?? "null"}\n{ex}");
             }
         }
 
