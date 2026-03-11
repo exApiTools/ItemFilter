@@ -63,9 +63,6 @@ public partial class ItemData
         public MapOccupationData OccupiedBy { get; set; } = OccupiedBy;
         public MapTypeData Type { get; set; } = Type;
         public MapInfluenceData Influence { get; set; } = Influence;
-        public bool IsBonusCompleted { get; set; } = IsBonusCompleted;
-        public bool IsCompleted { get; set; } = IsCompleted;
-        public WorldArea Area { get; set; } = Area;
     }
     #endregion
 
@@ -324,7 +321,7 @@ public partial class ItemData
             StackInfo = new StackData(stackComp.Size, stackComp.Info.MaxStackSize);
         }
 
-        if (item.TryGetComponent<ExileCore.PoEMemory.Components.Map>(out var mapComp))
+        if (item.TryGetComponent<ExileCore.PoEMemory.Components.MapKey>(out var mapComp))
         {
             MapInfo.Tier = mapComp.Tier;
             MapInfo.IsMap = true;
@@ -382,9 +379,6 @@ public partial class ItemData
             MapInfo.MoreMaps = itemStats[GameStat.MapMapItemDropChancePctFinalFromUberMod];
             MapInfo.MoreScarabs = itemStats[GameStat.MapScarabDropChancePctFinalFromUberMod];
             MapInfo.MoreCurrency = itemStats[GameStat.MapCurrencyDropChancePctFinalFromUberMod];
-            MapInfo.Area = mapComp.Area;
-            MapInfo.IsBonusCompleted = GameController.IngameState.ServerData.BonusCompletedAreas.Contains(MapInfo.Area) ? true : false;
-            MapInfo.IsCompleted = GameController.IngameState.ServerData.CompletedAreas.Contains(MapInfo.Area) ? true : false;
         }
 
         if (item.TryGetComponent<HeistContract>(out var heistComp))
