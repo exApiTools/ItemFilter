@@ -4,6 +4,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Linq.Dynamic.Core.CustomTypeProviders;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using System.Threading;
 using ExileCore2;
 using ExileCore2.PoEMemory.Components;
@@ -378,6 +379,13 @@ public partial class ItemData
 
     public List<ItemMod> FindMods(string wantedMod) => ModsInfo.ItemMods
         .Where(item => item.Name.Contains(wantedMod, StringComparison.OrdinalIgnoreCase)).ToList();
+
+    public List<ItemMod> FindModTranslationRegex(params string[] regexStrings)
+    {
+        var regexes = regexStrings.Select(x=> new Regex(x, RegexOptions.IgnoreCase));
+        return ModsInfo.ItemMods
+            .Where(item => regexes.Any(r => r.IsMatch(item.Translation))).ToList();
+    }
 
     public IReadOnlyDictionary<GameStat, int> ModStats(params string[] wantedMods)
     {
