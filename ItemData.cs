@@ -54,6 +54,7 @@ public partial class ItemData
 
     private readonly Dictionary<string, bool> _hasTagCache = new();
     private readonly Lazy<double> _estimatedValue;
+    private readonly Lazy<double?> _estimatedPublicPrice;
 
     public string Path { get; } = string.Empty;
     public string ClassName { get; } = string.Empty;
@@ -96,6 +97,7 @@ public partial class ItemData
     public int ShieldBlockChance { get; } = 0;
     public float Distance => GroundItem?.DistancePlayer ?? float.PositiveInfinity;
     public double EstimatedValue => _estimatedValue.Value;
+    public double? EstimatedPublicValue => _estimatedPublicPrice.Value;
     public StackData StackInfo { get; } = new StackData(0, 0);
     public Entity Entity { get; }
     public Entity GroundItem { get; }
@@ -353,6 +355,24 @@ public partial class ItemData
                 DebugWindow.LogError("Using EstimatedValue without NinjaPricer is not supported");
             }
             return value ?? 0;
+        }, LazyThreadSafetyMode.PublicationOnly);
+
+        _estimatedPublicPrice = new Lazy<double?>(() =>
+        {
+            if (string.IsNullOrWhiteSpace(PublicPrice)) return null;
+
+            var parts = PublicPrice.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 3 || parts[0] != "~b/o") return null;
+
+            if (!int.TryParse(parts[1], out var quantity)) return null;
+
+            var currencyCode = string.Join(" ", parts.Skip(2));
+            var noteCode = gc.Files.ItemNoteCode.EntriesList.FirstOrDefault(x => string.Equals(x.Code, currencyCode, StringComparison.OrdinalIgnoreCase));
+            if (noteCode?.CurrencyItem?.Type == null) return null;
+
+            var getCurrencyValue = gc.PluginBridge.GetMethod<Func<BaseItemType, double>>("NinjaPrice.GetBaseItemTypeValue");
+
+            return quantity * getCurrencyValue?.Invoke(noteCode.CurrencyItem.Type);
         }, LazyThreadSafetyMode.PublicationOnly);
     }
 
