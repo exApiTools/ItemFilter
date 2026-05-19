@@ -14,6 +14,7 @@ using ExileCore2.PoEMemory.MemoryObjects;
 using ExileCore2.Shared.Cache;
 using ExileCore2.Shared.Enums;
 using ExileCore2.PoEMemory;
+using ExileCore2.PoEMemory.Models;
 using Map = ExileCore2.PoEMemory.Components.Map;
 
 namespace ItemFilterLibrary;
