@@ -4,6 +4,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Linq.Dynamic.Core.CustomTypeProviders;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using System.Threading;
 using ExileCore2;
 using ExileCore2.PoEMemory.Components;
@@ -13,6 +14,8 @@ using ExileCore2.PoEMemory.MemoryObjects;
 using ExileCore2.Shared.Cache;
 using ExileCore2.Shared.Enums;
 using ExileCore2.PoEMemory;
+using ExileCore2.PoEMemory.Models;
+using GameOffsets2.Native;
 using Map = ExileCore2.PoEMemory.Components.Map;
 
 namespace ItemFilterLibrary;
@@ -51,8 +54,27 @@ public partial class ItemData
 
     public record AttackSpeedData(decimal Base, decimal Total);
 
+    public record DamageData(DamageRange Physical, DamageRange Fire, DamageRange Cold, DamageRange Lightning, DamageRange Chaos)
+    {
+        public DamageRange Total
+        {
+            get
+            {
+                var min = Physical.Min + Fire.Min + Cold.Min + Lightning.Min + Chaos.Min;
+                var max = Physical.Max + Fire.Max + Cold.Max + Lightning.Max + Chaos.Max;
+                return new DamageRange(min, max);
+            }
+        }
+    }
+
+    public record DamageRange(double Min, double Max)
+    {
+        public double Avg => (Min + Max) / 2;
+    }
+
     private readonly Dictionary<string, bool> _hasTagCache = new();
     private readonly Lazy<double> _estimatedValue;
+    private readonly Lazy<double?> _estimatedPublicPrice;
 
     public string Path { get; } = string.Empty;
     public string ClassName { get; } = string.Empty;
@@ -95,6 +117,7 @@ public partial class ItemData
     public int ShieldBlockChance { get; } = 0;
     public float Distance => GroundItem?.DistancePlayer ?? float.PositiveInfinity;
     public double EstimatedValue => _estimatedValue.Value;
+    public double? EstimatedPublicValue => _estimatedPublicPrice.Value;
     public StackData StackInfo { get; } = new StackData(0, 0);
     public Entity Entity { get; }
     public Entity GroundItem { get; }
@@ -111,6 +134,9 @@ public partial class ItemData
     public MapData MapInfo { get; set; } = new MapData(false, 0, 0, 0, 0, 0);
 
     public AttackSpeedData AttackSpeed { get; } = new AttackSpeedData(0, 0);
+
+    public DamageData Damage { get; } = new DamageData(new DamageRange(0, 0), new DamageRange(0, 0), new DamageRange(0, 0), new DamageRange(0, 0), new DamageRange(0, 0));
+    public DamageData DPS { get; } = new DamageData(new DamageRange(0, 0), new DamageRange(0, 0), new DamageRange(0, 0), new DamageRange(0, 0), new DamageRange(0, 0));
 
     public PlayerData PlayerInfo => _lastPlayerData = CurrentPlayerData;
 
@@ -173,7 +199,7 @@ public partial class ItemData
         GroundItem = groundItem;
         Entity = itemEntity;
         GameController = gc;
-        Path = item.Path;
+        Path = item.Path ?? string.Empty;
         Id = item.Id;
         InventoryId = item.InventoryId;
 
@@ -322,6 +348,25 @@ public partial class ItemData
                                               decimal.Round(tempAttackSpeedTotal, 2, MidpointRounding.ToPositiveInfinity));
 
             #endregion Attack Speed Calculation
+
+            Damage = new DamageData(new DamageRange(
+                    (weaponComp.DamageMin + LocalStats.GetValueOrDefault(GameStat.LocalMinimumAddedPhysicalDamage)) *
+                    (100 + LocalStats.GetValueOrDefault(GameStat.LocalPhysicalDamagePct)) / 100.0,
+                    (weaponComp.DamageMax + LocalStats.GetValueOrDefault(GameStat.LocalMaximumAddedPhysicalDamage)) *
+                    (100 + LocalStats.GetValueOrDefault(GameStat.LocalPhysicalDamagePct)) / 100.0),
+                new DamageRange(LocalStats.GetValueOrDefault(GameStat.LocalMinimumAddedFireDamage), LocalStats.GetValueOrDefault(GameStat.LocalMaximumAddedFireDamage)),
+                new DamageRange(LocalStats.GetValueOrDefault(GameStat.LocalMinimumAddedColdDamage), LocalStats.GetValueOrDefault(GameStat.LocalMaximumAddedColdDamage)),
+                new DamageRange(LocalStats.GetValueOrDefault(GameStat.LocalMinimumAddedLightningDamage), LocalStats.GetValueOrDefault(GameStat.LocalMaximumAddedLightningDamage)),
+                new DamageRange(LocalStats.GetValueOrDefault(GameStat.LocalMinimumAddedChaosDamage), LocalStats.GetValueOrDefault(GameStat.LocalMaximumAddedChaosDamage)));
+
+            var attackSpeedTotal = (double)AttackSpeed.Total;
+            DPS = new DamageData(
+                new DamageRange(Damage.Physical.Min * attackSpeedTotal, Damage.Physical.Max * attackSpeedTotal),
+                new DamageRange(Damage.Fire.Min * attackSpeedTotal, Damage.Fire.Max * attackSpeedTotal),
+                new DamageRange(Damage.Cold.Min * attackSpeedTotal, Damage.Cold.Max * attackSpeedTotal),
+                new DamageRange(Damage.Lightning.Min * attackSpeedTotal, Damage.Lightning.Max * attackSpeedTotal),
+                new DamageRange(Damage.Chaos.Min * attackSpeedTotal, Damage.Chaos.Max * attackSpeedTotal)
+            );
         }
 
         if (item.TryGetComponent<AttributeRequirements>(out var attributeReqComp))
@@ -353,6 +398,24 @@ public partial class ItemData
             }
             return value ?? 0;
         }, LazyThreadSafetyMode.PublicationOnly);
+
+        _estimatedPublicPrice = new Lazy<double?>(() =>
+        {
+            if (string.IsNullOrWhiteSpace(PublicPrice)) return null;
+
+            var parts = PublicPrice.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 3 || parts[0] != "~b/o") return null;
+
+            if (!int.TryParse(parts[1], out var quantity)) return null;
+
+            var currencyCode = string.Join(" ", parts.Skip(2));
+            var noteCode = gc.Files.ItemNoteCode.EntriesList.FirstOrDefault(x => string.Equals(x.Code, currencyCode, StringComparison.OrdinalIgnoreCase));
+            if (noteCode?.CurrencyItem?.Type == null) return null;
+
+            var getCurrencyValue = gc.PluginBridge.GetMethod<Func<BaseItemType, double>>("NinjaPrice.GetBaseItemTypeValue");
+
+            return quantity * getCurrencyValue?.Invoke(noteCode.CurrencyItem.Type);
+        }, LazyThreadSafetyMode.PublicationOnly);
     }
 
     public int GetTotalAffixSlots() => Rarity switch
@@ -378,6 +441,13 @@ public partial class ItemData
 
     public List<ItemMod> FindMods(string wantedMod) => ModsInfo.ItemMods
         .Where(item => item.Name.Contains(wantedMod, StringComparison.OrdinalIgnoreCase)).ToList();
+
+    public List<ItemMod> FindModTranslationRegex(params string[] regexStrings)
+    {
+        var regexes = regexStrings.Select(x=> new Regex(x, RegexOptions.IgnoreCase));
+        return ModsInfo.ItemMods
+            .Where(item => regexes.Any(r => r.IsMatch(item.Translation))).ToList();
+    }
 
     public IReadOnlyDictionary<GameStat, int> ModStats(params string[] wantedMods)
     {
