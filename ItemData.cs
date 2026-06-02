@@ -146,6 +146,7 @@ public partial class ItemData
     public string ClassName { get; } = string.Empty;
     public string BaseName { get; } = string.Empty;
     public string Name { get; } = string.Empty;
+    public string UniqueName { get; } = string.Empty;
     public string PublicPrice { get; } = string.Empty;
     public string HeistContractJobType { get; } = string.Empty;
     public string HeistContractTargetItem { get; } = string.Empty;
@@ -326,7 +327,8 @@ public partial class ItemData
             var affixSlots = GetTotalAffixSlots();
             IsIdentified = modsComp.Identified;
             ItemLevel = modsComp.ItemLevel;
-            Name = string.IsNullOrWhiteSpace(modsComp.UniqueName) ? Name : modsComp.UniqueName;
+            UniqueName = modsComp.UniqueName ?? string.Empty;
+            Name = string.IsNullOrWhiteSpace(UniqueName) ? Name : UniqueName;
             FracturedModCount = modsComp.CountFractured;
             IsSynthesised = modsComp.Synthesised;
             IsMirrored = modsComp.IsMirrored;
