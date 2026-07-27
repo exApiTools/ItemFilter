@@ -68,6 +68,37 @@ public partial class ItemData
     }
     #endregion
 
+    public class ChartConnectionData(int Mask, bool North, bool East, bool South, bool West)
+    {
+        public int Mask { get; set; } = Mask;
+        public bool North { get; set; } = North;
+        public bool East { get; set; } = East;
+        public bool South { get; set; } = South;
+        public bool West { get; set; } = West;
+    }
+
+    public class ChartRoomData(string Name, string Id, string Biome, int Path)
+    {
+        public string Name { get; set; } = Name;
+        public string Id { get; set; } = Id;
+        public string Biome { get; set; } = Biome;
+        public int Path { get; set; } = Path;
+    }
+
+    public record ChartData(bool IsChart, int Quantity, int Rarity, int PackSize, int GoldFound, int DeadmanSulphurFound, ChartRoomData Room, int Rotation, ChartConnectionData Connections, string Shape)
+    {
+        public bool IsChart { get; set; } = IsChart;
+        public int Quantity { get; set; } = Quantity;
+        public int Rarity { get; set; } = Rarity;
+        public int PackSize { get; set; } = PackSize;
+        public int GoldFound { get; set; } = GoldFound;
+        public int DeadmanSulphurFound { get; set; } = DeadmanSulphurFound;
+        public ChartRoomData Room { get; set; } = Room;
+        public int Rotation { get; set; } = Rotation;
+        public ChartConnectionData Connections { get; set; } = Connections;
+        public string Shape { get; set; } = Shape;
+    }
+
     public record CapturedMonsterData(bool IsMonster, string Name, string Id);
     public record NecropolisCorpseData(NecropolisCraftingMod CraftingMod, MonsterVariety Monster);
 
@@ -153,6 +184,7 @@ public partial class ItemData
     public AreaData AreaInfo { get; } = new AreaData(0, "N/A", 0, false);
     public ExpeditionSaga ExpeditionInfo { get; } = new ExpeditionSaga();
     public MapData MapInfo { get; set; } = new MapData(false, 0, 0, 0, 0, 0, 0, 0, 0, false, new MapOccupationData(false, false, false, false, false, false, false, false, false, false), new MapTypeData(false, false, false, false), new MapInfluenceData(false), false, false, null);
+    public ChartData ChartInfo { get; set; } = new ChartData(false, 0, 0, 0, 0, 0, new ChartRoomData("", "", "", 0), 0, new ChartConnectionData(0, false, false, false, false), "None");
 
     public AttackSpeedData AttackSpeed { get; } = new AttackSpeedData(0, 0);
 
@@ -385,6 +417,33 @@ public partial class ItemData
             MapInfo.MoreCurrency = itemStats[GameStat.MapCurrencyDropChancePctFinalFromUberMod];
         }
 
+        // charts are basically maps with shape/connection data + a few new modifiers
+        if (item.TryGetComponent<DeepwaterChart>(out var chartComp))
+        {
+            var chartStats = GetItemStats(ModsInfo.ExplicitMods);
+
+            ChartInfo.IsChart = true;
+            ChartInfo.Quantity = chartStats[GameStat.MapItemDropQuantityPct];
+            ChartInfo.Rarity = chartStats[GameStat.MapItemDropRarityPct];
+            ChartInfo.PackSize = chartStats[GameStat.MapPackSizePct];
+            ChartInfo.GoldFound = chartStats[GameStat.MapGoldFoundPct];
+            ChartInfo.DeadmanSulphurFound = chartStats[GameStat.MapDeepwaterLeagueResourceFoundPct];
+            ChartInfo.Room.Name = chartComp.Room?.Name ?? "";
+            ChartInfo.Room.Id = chartComp.Room?.Id ?? "";
+            ChartInfo.Room.Biome = chartComp.Room?.Biome?.Id ?? "";
+            ChartInfo.Room.Path = chartComp.Room?.Path ?? 0;
+            ChartInfo.Rotation = chartComp.Rotation;
+
+            var connections = RotateConnectionsCcw(ChartInfo.Room.Path, ChartInfo.Rotation);
+            // path bits are W=1 N=2 E=4 S=8
+            ChartInfo.Connections.Mask = connections;
+            ChartInfo.Connections.West = (connections & 1) != 0;
+            ChartInfo.Connections.North = (connections & 2) != 0;
+            ChartInfo.Connections.East = (connections & 4) != 0;
+            ChartInfo.Connections.South = (connections & 8) != 0;
+            ChartInfo.Shape = ChartShapeOf(connections);
+        }
+
         if (item.TryGetComponent<HeistContract>(out var heistComp))
         {
             HeistContractJobType = heistComp.RequiredJob?.Name ?? "";
@@ -571,6 +630,28 @@ public partial class ItemData
 
         return SumModStats(ModsInfo.ItemMods.IntersectBy(wantedMods, x => x.Name, StringComparer.OrdinalIgnoreCase));
     }
+
+    // the room's Path is the unrotated template, the chart's Rotation turns it counter-clockwise
+    private static int RotateConnectionsCcw(int path, int rotation)
+    {
+        var turns = (4 - rotation % 4) % 4;
+        for (var i = 0; i < turns; i++)
+        {
+            path = ((path << 1) | (path >> 3)) & 0xF;
+        }
+
+        return path;
+    }
+
+    // get the shape based on the connections (corner/straight both have two so we have to check which two are connected)
+    private static string ChartShapeOf(int connections) => System.Numerics.BitOperations.PopCount((uint)connections) switch
+    {
+        4 => "Cross",
+        3 => "Tee",
+        2 => (connections & 1) != 0 == ((connections & 4) != 0) ? "Straight" : "Corner",
+        1 => "Single",
+        _ => "None",
+    };
 
     public IReadOnlyDictionary<GameStat, int> GetItemStats(IEnumerable<ItemMod> list)
     {
