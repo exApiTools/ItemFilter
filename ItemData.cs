@@ -653,6 +653,9 @@ public partial class ItemData
         return (socketText.Where(x => x is not ('?' or 'w' or 'W')).ToLookup(char.ToLowerInvariant), wildcards, whites);
     }
 
+    public List<ItemMod> FilterByStat(IEnumerable<ItemMod> mods, params GameStat[] stats) =>
+        mods.Where(x => x.ModRecord.StatNames.Any(s => stats.Contains(s.MatchingStat))).ToList();
+
     public List<ItemMod> FindMods(string wantedMod) => ModsInfo.ItemMods
         .Where(item => item.Name.Contains(wantedMod, StringComparison.OrdinalIgnoreCase)).ToList();
 
