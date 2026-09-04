@@ -82,14 +82,12 @@ public partial class ItemData
     public string Name { get; } = string.Empty;
     public string UniqueName { get; } = string.Empty;
     public string PublicPrice { get; } = string.Empty;
-    public string HeistContractJobType { get; } = string.Empty;
     public int ItemQuality { get; } = 0;
     public int VeiledModCount { get; } = 0;
     public int ItemLevel { get; } = 0;
     public int RequiredLevel { get; } = 0;
     // public int RealRequiredLevel { get; } = 0; // TODO: Add calculations from equipped gems to get real required level
     public int DeliriumStacks { get; } = 0;
-    public int HeistContractReqJobLevel { get; } = 0;
     public int ScourgeTier { get; } = 0;
     public bool IsIdentified { get; } = false;
     public Influence InfluenceFlags { get; set; }
@@ -299,12 +297,6 @@ public partial class ItemData
             MapInfo.PackSize = itemStats[GameStat.MapPackSizePct];
             MapInfo.Quantity = itemStats[GameStat.MapItemDropQuantityPct];
             MapInfo.Rarity = itemStats[GameStat.MapItemDropRarityPct];
-        }
-
-        if (item.TryGetComponent<HeistContract>(out var heistComp))
-        {
-            HeistContractJobType = heistComp.RequiredJob?.Name ?? "";
-            HeistContractReqJobLevel = heistComp.RequiredJobLevel;
         }
 
         if (item.TryGetComponent<Charges>(out var chargesComp))
